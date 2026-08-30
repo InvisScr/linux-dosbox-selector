@@ -1,0 +1,21 @@
+# Build output. bin/ alone is ~1.1 GB against ~130 KB of source.
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+
+# Local fixture used to test mounting; not part of the app.
+testgame/
+
+# Editors
+.vs/
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,111 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:DosBoxSelector.ViewModels"
+        x:Class="DosBoxSelector.Views.FlavorEditorWindow"
+        x:DataType="vm:FlavorEditorViewModel"
+        Title="Manage DOSBox flavors"
+        Width="760" MinWidth="620"
+        Height="560" MinHeight="460"
+        WindowStartupLocation="CenterOwner">
+
+  <Grid ColumnDefinitions="220,*" Margin="14">
+
+    <!-- Flavor list -->
+    <Grid Grid.Column="0" RowDefinitions="*,Auto" Margin="0,0,12,0">
+      <ListBox Grid.Row="0" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:FlavorEditItem">
+            <TextBlock Text="{Binding ListLabel}" Margin="0,3" />
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+      <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
+        <Button Content="Add" Click="OnAddClick" />
+        <Button Content="Duplicate" Click="OnDuplicateClick" IsEnabled="{Binding HasSelection}" />
+        <Button Content="Remove" Click="OnRemoveClick" IsEnabled="{Binding HasSelection}" />
+      </StackPanel>
+    </Grid>
+
+    <!-- Detail form -->
+    <Grid Grid.Column="1" RowDefinitions="*,Auto">
+
+      <ScrollViewer Grid.Row="0" IsVisible="{Binding HasSelection}">
+        <StackPanel Spacing="10" DataContext="{Binding SelectedItem}" x:DataType="vm:FlavorEditItem"
+                    Margin="0,0,10,0">
+
+          <StackPanel Spacing="3">
+            <TextBlock Text="Name" FontSize="12" Opacity="0.7" />
+            <TextBox Text="{Binding DisplayName}" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="18">
+            <CheckBox Content="Enabled" IsChecked="{Binding Enabled}" />
+            <CheckBox Content="Flatpak" IsChecked="{Binding IsFlatpak}" />
+            <CheckBox Content="Mount folder as C: and open a prompt" IsChecked="{Binding MountAsDriveC}" />
+          </StackPanel>
+
+          <StackPanel Spacing="3">
+            <TextBlock Text="{Binding CommandLabel}" FontSize="12" Opacity="0.7" />
+            <TextBox Text="{Binding Command}" PlaceholderText="dosbox  ·  /home/you/DOSBox/dosbox  ·  com.dosbox_x.DOSBox-X" />
+          </StackPanel>
+
+          <StackPanel Spacing="3">
+            <TextBlock Text="Config flag" FontSize="12" Opacity="0.7" />
+            <TextBox Text="{Binding ConfArgument}" PlaceholderText="-conf  or  --conf" />
+            <TextBlock Text="Omitted entirely when you launch without a config file."
+                       FontSize="11" Opacity="0.5" TextWrapping="Wrap" />
+          </StackPanel>
+
+          <StackPanel Spacing="3">
+            <TextBlock Text="Config filenames (semicolon separated, wildcards allowed)"
+                       FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+            <TextBox Text="{Binding ConfPatterns}" PlaceholderText="dosbox-x.conf; dosbox-x-*.conf" />
+          </StackPanel>
+
+          <StackPanel Spacing="3">
+            <TextBlock Text="Version text to confirm" FontSize="12" Opacity="0.7" />
+            <TextBox Text="{Binding VersionMatch}" PlaceholderText="dosbox-staging" />
+            <TextBlock TextWrapping="Wrap" FontSize="11" Opacity="0.5"
+                       Text="Text expected in the output of &quot;-version&quot;. This is how two flavors that share a binary name are told apart. Leave blank to skip the check." />
+          </StackPanel>
+
+          <StackPanel Spacing="3">
+            <TextBlock Text="Extra places to look (semicolon separated)" FontSize="12" Opacity="0.7" />
+            <TextBox Text="{Binding SearchPaths}" PlaceholderText="~/DOSBox*/dosbox; /opt/dosbox*/dosbox" />
+            <TextBlock Text="Searched when the command isn't on your PATH."
+                       FontSize="11" Opacity="0.5" TextWrapping="Wrap" />
+          </StackPanel>
+
+          <StackPanel Spacing="3">
+            <TextBlock Text="Extra arguments" FontSize="12" Opacity="0.7" />
+            <TextBox Text="{Binding ExtraArguments}" PlaceholderText="-fullscreen" />
+            <TextBlock Text="{}{dir} and {conf} are replaced with the folder and chosen config."
+                       FontSize="11" Opacity="0.5" TextWrapping="Wrap" />
+          </StackPanel>
+
+        </StackPanel>
+      </ScrollViewer>
+
+      <TextBlock Grid.Row="0" IsVisible="{Binding !HasSelection}"
+                 Text="No flavor selected. Use Add to create one."
+                 Opacity="0.5" HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+      <StackPanel Grid.Row="1" Spacing="8" Margin="0,12,0,0">
+        <Border Padding="8,6" CornerRadius="4"
+                Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                IsVisible="{Binding HasTestResult}">
+          <TextBlock Text="{Binding TestResult}" FontSize="11" FontFamily="monospace"
+                     TextWrapping="Wrap" />
+        </Border>
+
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+          <Button Grid.Column="0" Content="Test" Click="OnTestClick" IsEnabled="{Binding HasSelection}" />
+          <Button Grid.Column="2" Content="Cancel" Click="OnCancelClick" Margin="0,0,8,0" MinWidth="80" />
+          <Button Grid.Column="3" Content="Save" Click="OnSaveClick" MinWidth="90"
+                  IsDefault="True" Classes="accent" />
+        </Grid>
+      </StackPanel>
+
+    </Grid>
+  </Grid>
+</Window>

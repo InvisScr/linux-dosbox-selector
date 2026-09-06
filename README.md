@@ -55,10 +55,23 @@ edits the list, and adding a fourth fork is pure data:
 | Config filenames | Globs this flavor claims, e.g. `dosbox-x.conf; dosbox-x-*.conf` |
 | Version text to confirm | Expected in `-version` output — see below |
 | Extra places to look | Globs searched when the command isn't on your PATH |
+| Default selection | Pre-highlight this flavor so you can press Launch immediately |
 | Mount folder as C: | Adds `-c "MOUNT C <dir>" -c "C:"` |
 | Extra arguments | Free-form; `{dir}` and `{conf}` are substituted |
 
 Stored as JSON at `~/.config/dosbox-selector/flavors.json`.
+
+### Which flavor starts highlighted
+
+In priority order:
+
+1. A flavor named by a `.conf` in the folder — the folder knows best.
+2. Your **default selection**, if that flavor is installed.
+3. The first installed flavor.
+
+Tick *Default selection* on whichever fork you reach for most and the picker opens ready to
+launch it. A default that isn't installed is skipped rather than pre-selected, so you never
+land on a row that can't run. Only one flavor can be the default, and having none is fine.
 
 ### Why "version text to confirm" exists
 

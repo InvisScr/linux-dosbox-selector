@@ -24,6 +24,13 @@ public sealed class DosBoxFlavor
 
     public bool Enabled { get; set; } = true;
 
+    /// <summary>
+    /// Pre-select this flavor when nothing in the folder implies one. At most one flavor should
+    /// carry it; the editor enforces that, and readers take the first if a hand-edited file has
+    /// several.
+    /// </summary>
+    public bool IsDefault { get; set; }
+
     public FlavorKind Kind { get; set; } = FlavorKind.Native;
 
     /// <summary>Executable name or absolute path (Native), or flatpak app id (Flatpak).</summary>
@@ -65,6 +72,8 @@ public sealed class DosBoxFlavor
         Id = Guid.NewGuid().ToString("n"),
         DisplayName = DisplayName,
         Enabled = Enabled,
+        // A copy must not inherit default status — that would create a second default.
+        IsDefault = false,
         Kind = Kind,
         Command = Command,
         ConfArgument = ConfArgument,

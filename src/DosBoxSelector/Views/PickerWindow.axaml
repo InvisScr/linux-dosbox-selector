@@ -27,8 +27,15 @@
         <DataTemplate x:DataType="vm:FlavorRow">
           <Grid ColumnDefinitions="*,Auto" Margin="2,4">
             <StackPanel Grid.Column="0" Spacing="1">
-              <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"
-                         Opacity="{Binding NameOpacity}" />
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"
+                           Opacity="{Binding NameOpacity}" />
+                <Border IsVisible="{Binding IsDefault}" VerticalAlignment="Center"
+                        Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                        CornerRadius="3" Padding="4,1">
+                  <TextBlock Text="default" FontSize="10" Opacity="0.6" />
+                </Border>
+              </StackPanel>
               <TextBlock Text="{Binding StatusText}" FontSize="11" Opacity="0.55"
                          TextTrimming="CharacterEllipsis" />
               <TextBlock Text="{Binding MatchHint}" FontSize="11" FontStyle="Italic"

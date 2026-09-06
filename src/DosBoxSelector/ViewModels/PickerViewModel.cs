@@ -193,6 +193,11 @@ public sealed partial class PickerViewModel : ObservableObject
                 SelectedFlavor = row;
         }
 
+        // Nothing in the folder implied a flavor, so fall back to the user's default. An
+        // unavailable default is skipped rather than pre-selected — landing on a row that
+        // can't launch would be worse than landing on one that can.
+        SelectedFlavor ??= Flavors.FirstOrDefault(f => f.Flavor.IsDefault && f.IsAvailable);
+
         SelectedFlavor ??= Flavors.FirstOrDefault(f => f.IsAvailable) ?? Flavors.FirstOrDefault();
 
         var flavorId = SelectedFlavor?.Flavor.Id;

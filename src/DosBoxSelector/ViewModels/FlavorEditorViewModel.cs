@@ -16,6 +16,7 @@ public sealed partial class FlavorEditItem : ObservableObject
         Source = flavor;
         DisplayName = flavor.DisplayName;
         Enabled = flavor.Enabled;
+        IsDefault = flavor.IsDefault;
         IsFlatpak = flavor.Kind == FlavorKind.Flatpak;
         Command = flavor.Command;
         ConfArgument = flavor.ConfArgument;
@@ -30,6 +31,7 @@ public sealed partial class FlavorEditItem : ObservableObject
 
     [ObservableProperty] public partial string DisplayName { get; set; }
     [ObservableProperty] public partial bool Enabled { get; set; }
+    [ObservableProperty] public partial bool IsDefault { get; set; }
     [ObservableProperty] public partial bool IsFlatpak { get; set; }
     [ObservableProperty] public partial string Command { get; set; }
     [ObservableProperty] public partial string ConfArgument { get; set; }
@@ -53,6 +55,7 @@ public sealed partial class FlavorEditItem : ObservableObject
     {
         Source.DisplayName = DisplayName.Trim();
         Source.Enabled = Enabled;
+        Source.IsDefault = IsDefault;
         Source.Kind = IsFlatpak ? FlavorKind.Flatpak : FlavorKind.Native;
         Source.Command = Command.Trim();
         Source.ConfArgument = ConfArgument.Trim();
@@ -78,9 +81,44 @@ public sealed partial class FlavorEditorViewModel : ObservableObject
     public FlavorEditorViewModel()
     {
         foreach (var flavor in FlavorStore.Load())
-            Items.Add(new FlavorEditItem(flavor));
+            Track(new FlavorEditItem(flavor));
+
+        // A hand-edited flavors.json could name several defaults; keep the first and drop the rest.
+        var seenDefault = false;
+        foreach (var item in Items)
+        {
+            if (item.IsDefault && seenDefault)
+                item.IsDefault = false;
+            else if (item.IsDefault)
+                seenDefault = true;
+        }
 
         SelectedItem = Items.FirstOrDefault();
+    }
+
+    private void Track(FlavorEditItem item)
+    {
+        item.PropertyChanged += OnItemChanged;
+        Items.Add(item);
+    }
+
+    /// <summary>
+    /// "Default" is exclusive, so ticking one clears the others. Modelled as a checkbox rather
+    /// than radio buttons because it also has to be possible to have no default at all.
+    /// </summary>
+    private void OnItemChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(FlavorEditItem.IsDefault))
+            return;
+
+        if (sender is not FlavorEditItem changed || !changed.IsDefault)
+            return;
+
+        foreach (var other in Items)
+        {
+            if (!ReferenceEquals(other, changed))
+                other.IsDefault = false;
+        }
     }
 
     public ObservableCollection<FlavorEditItem> Items { get; } = [];
@@ -110,7 +148,7 @@ public sealed partial class FlavorEditorViewModel : ObservableObject
             DisplayName = "New flavor",
             ConfArgument = "-conf",
         });
-        Items.Add(item);
+        Track(item);
         SelectedItem = item;
     }
 
@@ -122,7 +160,7 @@ public sealed partial class FlavorEditorViewModel : ObservableObject
         var copy = SelectedItem.Commit().Clone();
         copy.DisplayName += " (copy)";
         var item = new FlavorEditItem(copy);
-        Items.Add(item);
+        Track(item);
         SelectedItem = item;
     }
 
@@ -132,6 +170,7 @@ public sealed partial class FlavorEditorViewModel : ObservableObject
             return;
 
         var index = Items.IndexOf(SelectedItem);
+        SelectedItem.PropertyChanged -= OnItemChanged;
         Items.Remove(SelectedItem);
         SelectedItem = Items.Count == 0 ? null : Items[Math.Min(index, Items.Count - 1)];
     }

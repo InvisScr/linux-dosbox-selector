@@ -27,6 +27,9 @@ public sealed partial class FlavorRow : ObservableObject
     /// <summary>Greys out flavors that aren't installed rather than hiding them, so the list stays stable.</summary>
     public double NameOpacity => IsAvailable ? 1.0 : 0.45;
 
+    /// <summary>Marks the row the picker falls back to, so the setting is visible without opening the editor.</summary>
+    public bool IsDefault => Flavor.IsDefault;
+
     /// <summary>Set when a <c>.conf</c> in the folder points at this flavor, e.g. "matches dosbox-x.conf".</summary>
     [ObservableProperty]
     public partial string? MatchHint { get; set; }

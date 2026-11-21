@@ -19,6 +19,8 @@ public sealed record LaunchPlan(string FileName, IReadOnlyList<string> Arguments
 /// <summary>Builds and starts the emulator command line.</summary>
 public static class LaunchService
 {
+    private const string DosBoxXFlatpakId = "com.dosbox_x.DOSBox-X";
+
     /// <summary>
     /// Builds the command line. <paramref name="confPaths"/> is applied in order: every fork
     /// accepts its config flag more than once and lets later files override earlier ones
@@ -45,7 +47,23 @@ public static class LaunchService
             // app's standing permissions untouched.
             args.Add($"--filesystem={directory}");
 
+            // Start inside the sandbox in the mounted folder rather than relying on flatpak to
+            // carry the host working directory across, which it silently drops to $HOME when
+            // the path isn't visible.
+            args.Add($"--cwd={directory}");
+
+            // The DOSBox-X flatpak's default command is a wrapper script that does `cd "$HOME"`
+            // before exec'ing the emulator, which throws away --cwd and breaks every relative
+            // MOUNT/IMGMOUNT in a game's config ("Directory .\Foo does not exist"). Run the
+            // binary directly instead, passing the one flag the wrapper exists to add.
+            var isDosBoxX = string.Equals(flavor.Command, DosBoxXFlatpakId, StringComparison.OrdinalIgnoreCase);
+            if (isDosBoxX)
+                args.Add("--command=dosbox-x");
+
             args.Add(flavor.Command);
+
+            if (isDosBoxX)
+                args.Add("-nopromptfolder");
         }
 
         // Omitted entirely when nothing is chosen, so the emulator falls back to its own defaults.
@@ -80,6 +98,14 @@ public static class LaunchService
     /// <summary>Starts the emulator detached. Throws on failure so the caller can show the reason.</summary>
     public static void Launch(LaunchPlan plan)
     {
+        if (!Directory.Exists(plan.WorkingDirectory))
+            throw new DirectoryNotFoundException($"Folder no longer exists: {plan.WorkingDirectory}");
+
+        // Move the selector itself into the folder being mounted before anything is started,
+        // so the emulator — and any wrapper script standing in for it — begins there and
+        // relative paths in configs and -c commands resolve against the game folder.
+        Environment.CurrentDirectory = plan.WorkingDirectory;
+
         var psi = new ProcessStartInfo
         {
             FileName = plan.FileName,
